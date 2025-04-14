@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiBot.Net", "MultiBot.Net.csproj", "{70A5985E-A772-4D46-B0BC-C31DE32C7FE3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70A5985E-A772-4D46-B0BC-C31DE32C7FE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70A5985E-A772-4D46-B0BC-C31DE32C7FE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70A5985E-A772-4D46-B0BC-C31DE32C7FE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70A5985E-A772-4D46-B0BC-C31DE32C7FE3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D85BDCD2-4D6B-41B2-895E-9D5623598A5C}
+	EndGlobalSection
+EndGlobal
