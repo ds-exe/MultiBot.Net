@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace MultiBot.Net.Models;
+﻿namespace MultiBot.Net.Models;
 
 public class Config
 {
@@ -18,6 +16,3 @@ public class Config
 
     public ulong[]? TestServer { get; set; }
 }
-
-[JsonSerializable(typeof(Config))]
-internal sealed partial class ConfigGenerationContext: JsonSerializerContext;

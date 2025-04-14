@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Hosting;
-using NetCord.Gateway;
 
 namespace MultiBot.Net;
 
