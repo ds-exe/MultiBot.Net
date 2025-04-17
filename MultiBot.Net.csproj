@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Lavalink4NET.NetCord" Version="4.0.27" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.15" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     <PackageReference Include="NetCord" Version="1.0.0-alpha.359" />

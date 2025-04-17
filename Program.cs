@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Lavalink4NET.Extensions;
+using Lavalink4NET.NetCord;
+using Microsoft.Extensions.Hosting;
 
 namespace MultiBot.Net;
 
@@ -11,12 +13,35 @@ public class Program
 
     static async Task MainAsync(string[] args)
     {
+        var config = ConfigHelper.GetJsonObject<Config>("config");
+        if (config.Token == null || config.LavalinkPassword == null)
+        {
+            return;
+        };
+
         var builder = Host.CreateApplicationBuilder(args);
 
+        var hostname = "lavalink";
+        #if DEBUG
+        hostname = "127.0.0.1";
+        #endif
+
         builder.Services
-            .AddDiscordGateway(SetGatewayClientOptions);
+            .AddDiscordGateway(SetGatewayClientOptions)
+            .AddApplicationCommands()
+            .AddLavalink()
+            .ConfigureLavalink(cfg =>
+            {
+                cfg.BaseAddress = new Uri($"http://{hostname}:2333");
+                cfg.Passphrase = config.LavalinkPassword;
+                cfg.ReadyTimeout = TimeSpan.FromSeconds(10);
+            });
 
         var host = builder.Build();
+
+        host.AddModules(typeof(Program).Assembly);
+
+        host.UseGatewayEventHandlers();
 
         await host.RunAsync();
     }
@@ -24,10 +49,6 @@ public class Program
     static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
     {
         var config = ConfigHelper.GetJsonObject<Config>("config");
-        if (config.Token == null || config.LavalinkPassword == null)
-        {
-            return;
-        };
 
         gatewayOptions.Token = config.Token;
         gatewayOptions.Presence = new PresenceProperties(UserStatusType.Online).AddActivities([new UserActivityProperties("/help", UserActivityType.Listening)]);
