@@ -1,6 +1,7 @@
 ﻿using Lavalink4NET;
 using Lavalink4NET.NetCord;
 using Lavalink4NET.Players;
+using Lavalink4NET.Players.Preconditions;
 using Lavalink4NET.Rest.Entities.Tracks;
 
 namespace MultiBot.Net.Commands;
@@ -199,6 +200,24 @@ public class AudioCommandModule(IAudioService audioService) : ApplicationCommand
     //        Content = "Track Skipped.",
     //    });
     //}
+
+    [SlashCommand("stop", "Stops playback.")]
+    public async Task<string> Stop()
+    {
+        var retrieveOptions = new PlayerRetrieveOptions(ChannelBehavior: PlayerChannelBehavior.None, Preconditions: [PlayerPrecondition.Playing]);
+
+        var result = await audioService.Players
+            .RetrieveAsync(Context, playerFactory: PlayerFactory.Queued, retrieveOptions);
+
+        if (!result.IsSuccess)
+        {
+            return GetErrorMessage(result.Status);
+        }
+
+        await result.Player.StopAsync();
+
+        return $"Playback stopped.";
+    }
 
     //[SlashCommand("stop", "Stops playback.")]
     //public async Task Stop(InteractionContext ctx)
