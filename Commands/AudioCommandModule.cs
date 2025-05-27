@@ -11,16 +11,17 @@ public class AudioCommandModule(IAudioService audioService) : ApplicationCommand
     //public required QueueService _queueService;
 
     [SlashCommand("play", "Plays given query.")]
-    public async Task<string> Play([SlashCommandParameter(Description = "Selected Query")] string query)
+    public async Task Play([SlashCommandParameter(Description = "Selected Query")] string query)
     {
         var retrieveOptions = new PlayerRetrieveOptions(ChannelBehavior: PlayerChannelBehavior.Join);
 
         var result = await audioService.Players
-            .RetrieveAsync(Context, playerFactory: PlayerFactory.Queued, retrieveOptions);
+                .RetrieveAsync(Context, playerFactory: PlayerFactory.Queued, retrieveOptions);
 
         if (!result.IsSuccess)
         {
-            return GetErrorMessage(result.Status);
+            await Context.Interaction.SendFollowupMessageAsync(GetErrorMessage(result.Status));
+            return;
         }
 
         var track = await audioService.Tracks
@@ -28,12 +29,14 @@ public class AudioCommandModule(IAudioService audioService) : ApplicationCommand
 
         if (track is null)
         {
-            return "No tracks found.";
+            await Context.Interaction.SendFollowupMessageAsync("No tracks found.");
+            return;
         }
 
         await result.Player.PlayAsync(track);
 
-        return $"Now playing: {track.Title}";
+        await Context.Interaction.SendFollowupMessageAsync($"Now playing: {track.Title}");
+        return;
     }
 
     private static string GetErrorMessage(PlayerRetrieveStatus retrieveStatus) => retrieveStatus switch
