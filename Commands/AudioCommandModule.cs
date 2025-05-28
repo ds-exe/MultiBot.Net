@@ -13,6 +13,8 @@ public class AudioCommandModule(IAudioService audioService) : ApplicationCommand
     [SlashCommand("play", "Plays given query.")]
     public async Task Play([SlashCommandParameter(Description = "Selected Query")] string query)
     {
+        await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+
         var retrieveOptions = new PlayerRetrieveOptions(ChannelBehavior: PlayerChannelBehavior.Join);
 
         var result = await audioService.Players
