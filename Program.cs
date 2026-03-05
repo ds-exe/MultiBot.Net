@@ -1,8 +1,4 @@
-﻿using Lavalink4NET.Extensions;
-using Lavalink4NET.InactivityTracking.Extensions;
-using Lavalink4NET.InactivityTracking.Trackers.Users;
-using Lavalink4NET.NetCord;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace MultiBot.Net;
@@ -31,31 +27,15 @@ public class Program
 
         builder.Services
             .AddDiscordGateway(SetGatewayClientOptions)
-            .AddApplicationCommands()
-            .AddLavalink()
-            .AddInactivityTracking()
-            .ConfigureLavalink(cfg =>
-            {
-                cfg.BaseAddress = new Uri($"http://{hostname}:2333");
-                cfg.Passphrase = config.LavalinkPassword;
-                cfg.ReadyTimeout = TimeSpan.FromSeconds(10);
-            })
-            .ConfigureInactivityTracking(config =>
-            {
-                config.DefaultTimeout = TimeSpan.FromMinutes(15);
-            })
-            .Configure<UsersInactivityTrackerOptions>(config =>
-            {
-                config.Threshold = 0;
-            });
+            .AddApplicationCommands();
 
         var host = builder.Build();
 
         host.AddModules(typeof(Program).Assembly);
 
-        host.UseGatewayEventHandlers();
+        //host.UseGatewayEventHandlers();
 
-        await host.RunAsync();
+        //await host.RunAsync();
     }
 
     static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
