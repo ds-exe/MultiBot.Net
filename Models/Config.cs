@@ -1,4 +1,4 @@
-﻿namespace MultiBot.Net.Models;
+﻿namespace Multi_Bot.Net.Models;
 
 public class Config
 {

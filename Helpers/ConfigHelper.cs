@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MultiBot.Net.Helpers;
+namespace Multi_Bot.Net.Helpers;
 
 public class ConfigHelper
 {

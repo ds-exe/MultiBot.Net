@@ -1,4 +1,4 @@
-﻿namespace MultiBot.Net.Commands;
+﻿namespace Multi_Bot.Net.Modules;
 
 //public class OwnerCommandModule
 //{

@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace MultiBot.Net.Commands;
+﻿namespace Multi_Bot.Net.Modules;
 
 //public class HelpCommandModule : ApplicationCommandsModule
 //{
