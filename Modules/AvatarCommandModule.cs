@@ -19,5 +19,8 @@ public class AvatarCommandModule() : ApplicationCommandModule<ApplicationCommand
             Flags = MessageFlags.Ephemeral
         };
         await Context.Interaction.SendResponseAsync(InteractionCallback.Message(message));
+        
+        // await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+        // await Context.Interaction.SendFollowupMessageAsync("Updated Message");
     }
 }

@@ -13,10 +13,6 @@ public class Program
     static async Task MainAsync(string[] args)
     {
         var config = ConfigHelper.GetJsonObject<Config>("config");
-        if (config.LavalinkPassword == null)
-        {
-            return;
-        };
 
         var builder = Host.CreateApplicationBuilder(args);
 
