@@ -24,6 +24,7 @@ public class Program
             .AddDiscordGateway(SetGatewayClientOptions)
             .AddApplicationCommands(option =>
             {
+                // Commands are manually registered below to support Test Server
                 option.AutoRegisterCommands = false;
             });
 
@@ -31,6 +32,7 @@ public class Program
 
         host.AddModules(typeof(Program).Assembly);
         
+        #region register commands
         var client = host.Services.GetRequiredService<RestClient>();
 
         // make sure the minimal API style commands are added
@@ -47,21 +49,22 @@ public class Program
             manager.AddService(service);
         }
 
-        ulong applicationId = ((IEntityToken)client.Token!).Id;
-
-        //Also you will probably want to set AutoRegisterCommands to false in the configuration.
+        var applicationId = ((IEntityToken)client.Token!).Id;
+        
         if (config.TestServer == null)
         {
+            // register the global commands
             await manager.RegisterCommandsAsync(client, applicationId);
         }
         else
         {
             foreach (var guildId in config.TestServer)
             {
-                // register the commands
+                // register the guild commands
                 await manager.RegisterCommandsAsync(client, applicationId, guildId);
             }
         }
+        #endregion
 
         await host.RunAsync();
     }
