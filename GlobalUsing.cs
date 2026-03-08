@@ -1,6 +1,6 @@
 ﻿global using TimeZoneConverter;
-global using MultiBot.Net.Helpers;
-global using MultiBot.Net.Models;
+global using Multi_Bot.Net.Helpers;
+global using Multi_Bot.Net.Models;
 
 global using NetCord;
 global using NetCord.Gateway;

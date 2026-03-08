@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Multi_Bot.Net</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -16,14 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="Lavalink4NET.InactivityTracking" Version="4.0.27" />
-    <PackageReference Include="Lavalink4NET.NetCord" Version="4.0.27" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.15" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-    <PackageReference Include="NetCord" Version="1.0.0-alpha.359" />
-    <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.359" />
-    <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.359" />
-    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.359" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="NetCord" Version="1.0.0-alpha.469" />
+    <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.469" />
+    <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.469" />
+    <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.469" />
     <PackageReference Include="TimeZoneConverter" Version="7.0.0" />
   </ItemGroup>
 

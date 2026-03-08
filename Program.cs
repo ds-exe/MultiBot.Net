@@ -1,11 +1,7 @@
-﻿using Lavalink4NET.Extensions;
-using Lavalink4NET.InactivityTracking.Extensions;
-using Lavalink4NET.InactivityTracking.Trackers.Users;
-using Lavalink4NET.NetCord;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace MultiBot.Net;
+namespace Multi_Bot.Net;
 
 public class Program
 {
@@ -17,48 +13,59 @@ public class Program
     static async Task MainAsync(string[] args)
     {
         var config = ConfigHelper.GetJsonObject<Config>("config");
-        if (config.Token == null || config.LavalinkPassword == null)
-        {
-            return;
-        };
 
         var builder = Host.CreateApplicationBuilder(args);
 
-        var hostname = "lavalink";
-        #if DEBUG
-        hostname = "127.0.0.1";
-        #endif
-
         builder.Services
             .AddDiscordGateway(SetGatewayClientOptions)
-            .AddApplicationCommands()
-            .AddLavalink()
-            .AddInactivityTracking()
-            .ConfigureLavalink(cfg =>
+            .AddApplicationCommands(option =>
             {
-                cfg.BaseAddress = new Uri($"http://{hostname}:2333");
-                cfg.Passphrase = config.LavalinkPassword;
-                cfg.ReadyTimeout = TimeSpan.FromSeconds(10);
-            })
-            .ConfigureInactivityTracking(config =>
-            {
-                config.DefaultTimeout = TimeSpan.FromMinutes(15);
-            })
-            .Configure<UsersInactivityTrackerOptions>(config =>
-            {
-                config.Threshold = 0;
+                // Commands are manually registered below to support Test Server
+                option.AutoRegisterCommands = false;
             });
 
         var host = builder.Build();
 
         host.AddModules(typeof(Program).Assembly);
+        
+        #region register commands
+        var client = host.Services.GetRequiredService<RestClient>();
 
-        host.UseGatewayEventHandlers();
+        // make sure the minimal API style commands are added
+        foreach (var commandsBuilder in host.Services.GetServices<IApplicationCommandsBuilder>())
+        {
+            commandsBuilder.Build();
+        }
+
+        ApplicationCommandServiceManager manager = new();
+
+        // add registered services to the manager
+        foreach (var service in host.Services.GetServices<IApplicationCommandService>())
+        {
+            manager.AddService(service);
+        }
+
+        var applicationId = ((IEntityToken)client.Token!).Id;
+        
+        if (config.TestServer == null)
+        {
+            // register the global commands
+            await manager.RegisterCommandsAsync(client, applicationId);
+        }
+        else
+        {
+            foreach (var guildId in config.TestServer)
+            {
+                // register the guild commands
+                await manager.RegisterCommandsAsync(client, applicationId, guildId);
+            }
+        }
+        #endregion
 
         await host.RunAsync();
     }
 
-    static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
+    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
     {
         var config = ConfigHelper.GetJsonObject<Config>("config");
 
