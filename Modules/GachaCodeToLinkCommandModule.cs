@@ -1,47 +1,38 @@
-﻿namespace Multi_Bot.Net.Modules;
+﻿
 
-//public class GachaCodeToLinkCommandModule : ApplicationCommandsModule
-//{
-//    private static readonly string _codeRegex = @"^\w+$";
+namespace Multi_Bot.Net.Modules;
 
-//    [SlashCommand("code", "Gets the given code as a link")]
-//    public async Task CodeToLinkCommand(InteractionContext ctx, [Option("game", "Selected Game")] GachaOptions gachaGame, [Option("code", "Selected Code")] string code)
-//    {
-//        if (!Regex.Match(code, _codeRegex).Success)
-//        {
-//            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-//            {
-//                Content = "Invalid code entered.",
-//                IsEphemeral = true,
-//            });
-//            return;
-//        }
+public class GachaCodeToLinkCommandModule() : ApplicationCommandModule<ApplicationCommandContext>
+{
+    private const string CodeRegex = @"^\w+$";
 
-//        string url = string.Empty;
-//        switch(gachaGame)
-//        {
-//            case GachaOptions.ZZZ:
-//                url = $"https://zenless.hoyoverse.com/redemption?code={code}";
-//                break;
-//            case GachaOptions.HSR:
-//                url = $"https://hsr.hoyoverse.com/gift?code={code}";
-//                break;
-//            case GachaOptions.Genshin:
-//                url = $"https://genshin.hoyoverse.com/en/gift?code={code}";
-//                break;
-//        }
+    [SlashCommand("code", "Gets the given code as a link")]
+    public async Task CodeToLinkCommand([SlashCommandParameter(Name = "game", Description = "Selected Game")] GachaOptions gachaGame, 
+                                        [SlashCommandParameter(Name = "code", Description = "Selected Code")] string code)
+    {
+        if (!Regex.IsMatch(code, CodeRegex))
+        {
+            await InteractionHelper.SendReponse(Context.Interaction, "Invalide code entered.", true);
+            return;
+        }
 
-//        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-//        {
-//            Content = $"[{code}]({url})",
-//        });
-//        return;
-//    }
+        string url = gachaGame switch
+        {
+            GachaOptions.Zzz => $"https://zenless.hoyoverse.com/redemption?code={code}",
+            GachaOptions.Hsr => $"https://hsr.hoyoverse.com/gift?code={code}",
+            GachaOptions.Genshin => $"https://genshin.hoyoverse.com/en/gift?code={code}",
+            _ => string.Empty
+        };
 
-//    public enum GachaOptions
-//    {
-//        ZZZ,
-//        HSR,
-//        Genshin
-//    }
-//}
+        await InteractionHelper.SendReponse(Context.Interaction, $"[{code}]({url})");
+    }
+
+    public enum GachaOptions
+    {
+        [SlashCommandChoice(Name = "ZZZ")]
+        Zzz,
+        [SlashCommandChoice(Name = "HSR")]
+        Hsr,
+        Genshin
+    }
+}
