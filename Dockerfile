@@ -14,4 +14,4 @@ WORKDIR /App
 COPY --from=build-env /App/out .
 COPY --from=build-env /App/timezones.json .
 CMD ["ls"]
-ENTRYPOINT ["dotnet", "Multi-Bot-Sharp.dll"]
+ENTRYPOINT ["dotnet", "MultiBot.Net.dll"]
