@@ -17,7 +17,7 @@ public class Program
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Services
-            .AddDiscordGateway(SetGatewayClientOptions)
+            .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, config))
             .AddApplicationCommands(option =>
             {
                 // Commands are manually registered below to support Test Server
@@ -27,7 +27,7 @@ public class Program
         var host = builder.Build();
 
         host.AddModules(typeof(Program).Assembly);
-        
+
         #region register commands
         var client = host.Services.GetRequiredService<RestClient>();
 
@@ -46,7 +46,7 @@ public class Program
         }
 
         var applicationId = ((IEntityToken)client.Token!).Id;
-        
+
         if (config.TestServer == null)
         {
             // register the global commands
@@ -65,10 +65,8 @@ public class Program
         await host.RunAsync();
     }
 
-    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
+    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions, Config config)
     {
-        var config = ConfigHelper.GetJsonObject<Config>("config");
-
         gatewayOptions.Token = config.Token;
         gatewayOptions.Presence = new PresenceProperties(UserStatusType.Online).AddActivities([new UserActivityProperties("/help", UserActivityType.Listening)]);
     }
