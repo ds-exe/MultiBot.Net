@@ -1,6 +1,4 @@
-﻿
-
-namespace Multi_Bot.Net.Modules;
+﻿namespace Multi_Bot.Net.Modules;
 
 public class GachaCodeToLinkCommandModule() : ApplicationCommandModule<ApplicationCommandContext>
 {

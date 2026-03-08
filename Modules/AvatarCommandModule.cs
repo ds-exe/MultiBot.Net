@@ -1,6 +1,4 @@
-﻿using NetCord.Services.ApplicationCommands;
-
-namespace Multi_Bot.Net.Modules;
+﻿namespace Multi_Bot.Net.Modules;
 
 public class AvatarCommandModule() : ApplicationCommandModule<ApplicationCommandContext>
 {
