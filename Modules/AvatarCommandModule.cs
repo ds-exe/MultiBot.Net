@@ -9,10 +9,10 @@ public class AvatarCommandModule() : ApplicationCommandModule<ApplicationCommand
 
         if (avatar == null)
         {
-            await InteractionHelper.SendReponse(Context.Interaction, "Invalid user avatar");
+            await InteractionHelper.SendResponse(Context.Interaction, "Invalid user avatar");
             return;
         }
 
-        await InteractionHelper.SendReponse(Context.Interaction, avatar.ToString(), true);
+        await InteractionHelper.SendResponse(Context.Interaction, avatar.ToString(), isEphemeral: true);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Multi_Bot.Net.Modules;
 
-public class GachaCodeToLinkCommandModule() : ApplicationCommandModule<ApplicationCommandContext>
+public class GachaCodeToLinkCommandModule : ApplicationCommandModule<ApplicationCommandContext>
 {
     private const string CodeRegex = @"^\w+$";
 
@@ -10,7 +10,7 @@ public class GachaCodeToLinkCommandModule() : ApplicationCommandModule<Applicati
     {
         if (!Regex.IsMatch(code, CodeRegex))
         {
-            await InteractionHelper.SendReponse(Context.Interaction, "Invalide code entered.", true);
+            await InteractionHelper.SendResponse(Context.Interaction, "Invalid code entered.", isEphemeral: true);
             return;
         }
 
@@ -22,7 +22,7 @@ public class GachaCodeToLinkCommandModule() : ApplicationCommandModule<Applicati
             _ => string.Empty
         };
 
-        await InteractionHelper.SendReponse(Context.Interaction, $"[{code}]({url})");
+        await InteractionHelper.SendResponse(Context.Interaction, $"[{code}]({url})");
     }
 
     public enum GachaOptions

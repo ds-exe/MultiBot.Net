@@ -112,33 +112,5 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
 
             return commandNames.Distinct().Select(rec => new ApplicationCommandOptionChoiceProperties(rec, rec)); 
         }
-
-        // public async Task<IEnumerable<DiscordApplicationCommandAutocompleteChoice>> Provider(AutocompleteContext context)
-        // {
-        //     IEnumerable<DiscordApplicationCommand> slashCommands = null;
-        //     var globalCommandsTask = context.Client.GetGlobalApplicationCommandsAsync();
-        //     if (context.Guild != null)
-        //     {
-        //         var guildCommandsTask = context.Client.GetGuildApplicationCommandsAsync(context.Guild.Id);
-        //         await Task.WhenAll(globalCommandsTask, guildCommandsTask).ConfigureAwait(false);
-        //         slashCommands = globalCommandsTask.Result.Concat(guildCommandsTask.Result)
-        //             .Where(ac => !ac.Name.Equals("help", StringComparison.OrdinalIgnoreCase))
-        //             .GroupBy(ac => ac.Name).Select(x => x.First())
-        //             .Where(ac => ac.Name.StartsWith(context.Options[0].Value.ToString(), StringComparison.OrdinalIgnoreCase))
-        //             .ToList();
-        //     }
-        //     else
-        //     {
-        //         await Task.WhenAll(globalCommandsTask).ConfigureAwait(false);
-        //         slashCommands = globalCommandsTask.Result
-        //             .Where(ac => !ac.Name.Equals("help", StringComparison.OrdinalIgnoreCase))
-        //             .GroupBy(ac => ac.Name).Select(x => x.First())
-        //             .Where(ac => ac.Name.StartsWith(context.Options[0].Value.ToString(), StringComparison.OrdinalIgnoreCase))
-        //             .ToList();
-        //     }
-        //
-        //     var options = slashCommands.Take(25).Select(sc => new DiscordApplicationCommandAutocompleteChoice(sc.Name, sc.Name.Trim())).ToList();
-        //     return options.AsEnumerable();
-        // }
     }
 }

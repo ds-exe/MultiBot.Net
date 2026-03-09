@@ -1,17 +1,36 @@
 namespace Multi_Bot.Net.Helpers;
 
-public class InteractionHelper
+public static class InteractionHelper
 {
-    public static async Task SendReponse(ApplicationCommandInteraction interaction, string text, bool isEphemeral = false)
+    public static async Task SendResponse(ApplicationCommandInteraction interaction, string? text = null, EmbedProperties? embed = null, bool isEphemeral = false)
     {
+        if (text == null && embed == null)
+        {
+            return;
+        }
+
         var message = new InteractionMessageProperties()
         {
+            Flags = isEphemeral ? MessageFlags.Ephemeral : 0,
             Content = text,
-            Flags = isEphemeral ? MessageFlags.Ephemeral : 0
+            Embeds =  embed != null ? [embed] : null
         };
         await interaction.SendResponseAsync(InteractionCallback.Message(message));
     }
-    
-    // await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
-    // await Context.Interaction.SendFollowupMessageAsync("Updated Message");
+
+    public static async Task SendDeferredResponse(ApplicationCommandInteraction interaction)
+    {
+        await interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+    }
+
+    public static async Task SendFollowupResponse(ApplicationCommandInteraction interaction, string text, EmbedProperties? embed = null, bool isEphemeral = false)
+    {
+        var message = new InteractionMessageProperties()
+        {
+            Flags = isEphemeral ? MessageFlags.Ephemeral : 0,
+            Content = text,
+            Embeds =  embed != null ? [embed] : null
+        };
+        await interaction.SendFollowupMessageAsync(message);
+    }
 }
