@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NetCord.Services.ApplicationCommands;
 
 namespace Multi_Bot.Net;
 
@@ -27,9 +26,13 @@ public class Program
 
         var host = builder.Build();
 
-        host.AddModules(typeof(Program).Assembly);
-
         #region register commands
+        bool removeCommands = config.RemoveCommands;
+        if (!removeCommands)
+        {
+            host.AddModules(typeof(Program).Assembly);
+        }
+
         var client = host.Services.GetRequiredService<RestClient>();
 
         // make sure the minimal API style commands are added
@@ -47,18 +50,29 @@ public class Program
         }
 
         var applicationId = ((IEntityToken)client.Token!).Id;
-
         if (config.TestServer == null)
         {
-            // register the global commands
-            await manager.RegisterCommandsAsync(client, applicationId);
+            if (!removeCommands)
+            {
+                await manager.RegisterCommandsAsync(client, applicationId);
+            }
+            else
+            {
+                await client.BulkOverwriteGlobalApplicationCommandsAsync(applicationId, []);
+            }
         }
         else
         {
             foreach (var guildId in config.TestServer)
             {
-                // register the guild commands
-                await manager.RegisterCommandsAsync(client, applicationId, guildId);
+                if (!removeCommands)
+                {
+                    await manager.RegisterCommandsAsync(client, applicationId, guildId);
+                }
+                else
+                {
+                    await client.BulkOverwriteGuildApplicationCommandsAsync(applicationId, guildId, []);
+                }
             }
         }
         #endregion
