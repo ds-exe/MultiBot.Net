@@ -1,4 +1,6 @@
-﻿namespace Multi_Bot.Net.Modules;
+﻿using System.Text;
+
+namespace Multi_Bot.Net.Modules;
 
 public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandContext>
 {
@@ -31,44 +33,45 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
             await InteractionHelper.SendResponse(Context.Interaction, "Slash command not found", isEphemeral: true);
             return;
         }
-        
+
         var command = applicationCommands[0];
-        var embed = new EmbedProperties()
+        var embed = new EmbedProperties
         {
             Title = "Help",
             Description =
-                $"/{command.Name}: {command.Description}" // replace '/{command.Name}' with equivalent of 'command.Mention'
-        };
-        embed.Fields = [
-            new EmbedFieldProperties()
+                $"{command.ToString()}: {command.Description}",
+            Fields =
+            [
+                new EmbedFieldProperties()
+                {
+                    Name = "Command is NSFW",
+                    Value = command.Nsfw.ToString()
+                }
+            ],
+            Color = new Color(39423), // 0099ff
+            Thumbnail = _embedThumbnail,
+            Footer = new EmbedFooterProperties
             {
-                Name = "Command is NSFW",
-                Value = command.Nsfw.ToString()
+                Text = $"BOT owner @{_user.Username}",
+                IconUrl = _user.GetAvatarUrl()?.ToString()
             }
-        ];
-        embed.Color = new Color(39423);
-        embed.Thumbnail = _embedThumbnail;
-        embed.Footer = new EmbedFooterProperties()
-        {
-            Text = $"BOT owner @{_user.Username}",
-            IconUrl = _user.GetAvatarUrl()?.ToString()
         };
-        
-        // if (command.Options is not null)
-        // {
-        //     var commandOptions = command.Options.ToList();
-        //     var sb = new StringBuilder();
-        //
-        //     foreach (var option in commandOptions)
-        //         sb.Append('`').Append(option.Name).Append("`: ").Append(option.Description ?? "No description provided.").Append('\n');
-        //
-        //     sb.Append('\n');
-        //     discordEmbed.AddField(new("Arguments", sb.ToString().Trim()));
-        // }
-        //
-        // await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-        //         new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral()).ConfigureAwait(false);
-        
+
+        if (command.Options.Count > 0)
+        {
+            var sb = new StringBuilder();
+            foreach (var option in command.Options)
+            {
+                sb.Append('`').Append(option.Name).Append("`: ").Append(option.Description).Append('\n');
+            }
+            sb.Append('\n');
+            embed.AddFields(new EmbedFieldProperties
+            {
+                Name = "Arguments",
+                Value = sb.ToString().Trim()
+            });
+        }
+
         await InteractionHelper.SendResponse(Context.Interaction, embed: embed, isEphemeral: true);
     }
 
