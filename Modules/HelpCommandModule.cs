@@ -2,70 +2,58 @@
 
 public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandContext>
 {
-    private const ulong creatorID = 74968333413257216;
-    private User User;
-    private string EmbedThumbnail;
+    private const ulong CreatorId = 74968333413257216;
+    
+    private readonly RestClient _client;
+    private readonly User _user;
+    private readonly string _embedThumbnail;
 
     public HelpCommandModule(RestClient discordClient)
     {
+        _client = discordClient;
         var config = ConfigHelper.GetJsonObject<Config>("config");
-        var botOwner = config.Owner == 0 ? creatorID : config.Owner;
-        User = discordClient.GetUserAsync(botOwner).Result;
-        EmbedThumbnail = config.EmbedThumbnail ?? "";
+        var botOwner = config.Owner == 0 ? CreatorId : config.Owner;
+        _user = _client.GetUserAsync(botOwner).Result;
+        _embedThumbnail = config.EmbedThumbnail ?? "";
     }
 
     // Initial code based on DisCatSharp default help command
     [SlashCommand("help", "Displays command help")]
     //public async Task Avatar([SlashCommandParameter(Description = "Selected User")] User? user = null)
-    public async Task DefaultHelpAsync([SlashCommandParameter(Name = "option_one", 
-                                                              Description = "top level command to provide help for", 
-                                                              AutocompleteProviderType = typeof(DefaultHelpAutoCompleteProvider))] string commandName)
+    public async Task Help([SlashCommandParameter(Name = "option_one", 
+                                                  Description = "top level command to provide help for", 
+                                                  AutocompleteProviderType = typeof(DefaultHelpAutoCompleteProvider))] string commandName)
     {
-        // List<DiscordApplicationCommand> applicationCommands = null;
-        // var globalCommandsTask = ctx.Client.GetGlobalApplicationCommandsAsync();
-        // if (ctx.Guild != null)
-        // {
-        //     var guildCommandsTask = ctx.Client.GetGuildApplicationCommandsAsync(ctx.Guild.Id);
-        //     await Task.WhenAll(globalCommandsTask, guildCommandsTask).ConfigureAwait(false);
-        //     applicationCommands = globalCommandsTask.Result.Concat(guildCommandsTask.Result)
-        //         .Where(ac => !ac.Name.Equals("help", StringComparison.OrdinalIgnoreCase))
-        //         .GroupBy(ac => ac.Name).Select(x => x.First())
-        //         .ToList();
-        // }
-        // else
-        // {
-        //     await Task.WhenAll(globalCommandsTask).ConfigureAwait(false);
-        //     applicationCommands = globalCommandsTask.Result
-        //         .Where(ac => !ac.Name.Equals("help", StringComparison.OrdinalIgnoreCase))
-        //         .GroupBy(ac => ac.Name).Select(x => x.First())
-        //         .ToList();
-        // }
-        //
-        // if (applicationCommands.Count < 1)
-        // {
-        //     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-        //             .WithContent("There are no slash commands").AsEphemeral()).ConfigureAwait(false);
-        //     return;
-        // }
-        //
-        // var command = applicationCommands.FirstOrDefault(cm => cm.Name.Equals(commandName, StringComparison.OrdinalIgnoreCase));
-        // if (command is null)
-        // {
-        //     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-        //             .WithContent($"No command called {commandName} in guild {ctx.Guild.Name}").AsEphemeral()).ConfigureAwait(false);
-        //     return;
-        // }
-        //
-        // var discordEmbed = new DiscordEmbedBuilder
-        // {
-        //     Title = "Help",
-        //     Description = $"{command.Mention}: {command.Description ?? "No description provided."}"
-        // }.AddField(new("Command is NSFW", command.IsNsfw.ToString()));
-        // // Custom help start
-        // discordEmbed.Color = new DiscordColor("0099ff");
-        // discordEmbed.WithThumbnail(EmbedThumbnail);
-        // discordEmbed.WithFooter($"BOT owner @{User.Username}", User.AvatarUrl);
-        // // Custom help end
+        var applicationCommands = await GetApplicationCommands(_client, Context.Guild?.Id, commandName);
+        
+        if (applicationCommands.Count < 1)
+        {
+            await InteractionHelper.SendResponse(Context.Interaction, "Slash command not found", isEphemeral: true);
+            return;
+        }
+        
+        var command = applicationCommands[0];
+        var embed = new EmbedProperties()
+        {
+            Title = "Help",
+            Description =
+                $"/{command.Name}: {command.Description}" // replace '/{command.Name}' with equivalent of 'command.Mention'
+        };
+        embed.Fields = [
+            new EmbedFieldProperties()
+            {
+                Name = "Command is NSFW",
+                Value = command.Nsfw.ToString()
+            }
+        ];
+        embed.Color = new Color(39423);
+        embed.Thumbnail = _embedThumbnail;
+        embed.Footer = new EmbedFooterProperties()
+        {
+            Text = $"BOT owner @{_user.Username}",
+            IconUrl = _user.GetAvatarUrl()?.ToString()
+        };
+        
         // if (command.Options is not null)
         // {
         //     var commandOptions = command.Options.ToList();
@@ -80,6 +68,34 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
         //
         // await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
         //         new DiscordInteractionResponseBuilder().AddEmbed(discordEmbed).AsEphemeral()).ConfigureAwait(false);
+        
+        await InteractionHelper.SendResponse(Context.Interaction, embed: embed, isEphemeral: true);
+    }
+
+    private static async Task<List<ApplicationCommand>> GetApplicationCommands(RestClient client, ulong? guildId, string commandName)
+    {
+        var applicationId = ((IEntityToken)client.Token!).Id;
+        var commands = await client.GetGlobalApplicationCommandsAsync(applicationId);
+        IReadOnlyList<GuildApplicationCommand> guildCommands = [];
+
+        if (guildId != null)
+        {
+            guildCommands = await client.GetGuildApplicationCommandsAsync(applicationId, guildId.Value);
+        }
+
+        List<ApplicationCommand> matchedCommands = [];
+        if (commands.Count > 0)
+        {
+            var foundCommands = commands.Where(rec => rec.Name.Contains(commandName, StringComparison.OrdinalIgnoreCase)).ToList();
+            matchedCommands.AddRange(foundCommands);
+        }
+
+        if (guildCommands.Count > 0)
+        {
+            var foundCommands = guildCommands.Where(rec => rec.Name.Contains(commandName, StringComparison.OrdinalIgnoreCase)).ToList();
+            matchedCommands.AddRange(foundCommands);
+        }
+        return matchedCommands.DistinctBy(rec => rec.Name).ToList();
     }
 
     private class DefaultHelpAutoCompleteProvider(RestClient client) : IAutocompleteProvider<AutocompleteInteractionContext>
@@ -87,30 +103,10 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
         public async ValueTask<IEnumerable<ApplicationCommandOptionChoiceProperties>?> GetChoicesAsync(
             ApplicationCommandInteractionDataOption option, AutocompleteInteractionContext context)
         {
-            var applicationId = ((IEntityToken)client.Token!).Id;
-            var commands = await client.GetGlobalApplicationCommandsAsync(applicationId);
-            IReadOnlyList<GuildApplicationCommand> guildCommands = [];
+            var userInput = option.Value ?? string.Empty;
             var guildId = context.Guild?.Id;
-            if (guildId != null)
-            {
-                guildCommands = await client.GetGuildApplicationCommandsAsync(applicationId, guildId.Value);
-            }
-
-            string userInput = option.Value ?? string.Empty;
-            List<string> commandNames = [];
-            if (commands.Count > 0)
-            {
-                var foundCommands = commands.Where(rec => rec.Name.Contains(userInput, StringComparison.OrdinalIgnoreCase)).ToList();
-                commandNames.AddRange(foundCommands.Select(rec => rec.Name));
-            }
-
-            if (guildCommands.Count > 0)
-            {
-                var foundCommands = guildCommands.Where(rec => rec.Name.Contains(userInput, StringComparison.OrdinalIgnoreCase)).ToList();
-                commandNames.AddRange(foundCommands.Select(rec => rec.Name));
-            }
-
-            return commandNames.Distinct().Select(rec => new ApplicationCommandOptionChoiceProperties(rec, rec)); 
+            var commands = await GetApplicationCommands(client, guildId, userInput);
+            return commands.Select(rec => new ApplicationCommandOptionChoiceProperties(rec.Name, rec.Name)); 
         }
     }
 }
