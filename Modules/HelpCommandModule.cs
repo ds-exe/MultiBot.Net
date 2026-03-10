@@ -98,6 +98,8 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
             var foundCommands = guildCommands.Where(rec => rec.Name.Contains(commandName, StringComparison.OrdinalIgnoreCase)).ToList();
             matchedCommands.AddRange(foundCommands);
         }
+
+        matchedCommands.RemoveAll(rec => rec.Name == "restart");
         return matchedCommands.DistinctBy(rec => rec.Name).ToList();
     }
 

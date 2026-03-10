@@ -22,7 +22,8 @@ public class Program
             {
                 // Commands are manually registered below to support Test Server
                 option.AutoRegisterCommands = false;
-            });
+            })
+            .AddSingleton<DatabaseService>();
 
         var host = builder.Build();
 
