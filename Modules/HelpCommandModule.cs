@@ -19,9 +19,7 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
         _embedThumbnail = config.EmbedThumbnail ?? "";
     }
 
-    // Initial code based on DisCatSharp default help command
     [SlashCommand("help", "Displays command help")]
-    //public async Task Avatar([SlashCommandParameter(Description = "Selected User")] User? user = null)
     public async Task Help([SlashCommandParameter(Name = "option_one", 
                                                   Description = "top level command to provide help for", 
                                                   AutocompleteProviderType = typeof(DefaultHelpAutoCompleteProvider))] string commandName)

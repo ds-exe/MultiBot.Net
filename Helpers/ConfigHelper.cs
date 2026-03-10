@@ -7,6 +7,7 @@ public static class ConfigHelper
     public static T GetJsonObject<T>(string file)
     {
         var cwd = Directory.GetCurrentDirectory();
+        // ReSharper disable once RedundantAssignment
         var path = cwd + $"/{file}.json";
 
         #if DEBUG

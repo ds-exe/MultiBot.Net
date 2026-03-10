@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using NetCord.Services.Commands;
 using TimeZoneConverter;
 
 namespace Multi_Bot.Net.Modules;
@@ -8,12 +7,15 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
 {
     private static readonly Dictionary<string, string> TimeZones =
         ConfigHelper.GetJsonObject<Dictionary<string, string>>("timezones");
-
-    private const string DateRegex = @"^(\d{2})/(\d{2})/?(\d{4})?$";
+    
+    private const string SlashDateRegex = @"^(\d{1,2})/(\d{1,2})/?(\d{4})?$";
+    private const string DotDateRegex = @"^(\d{1,2})\.(\d{1,2})\.?(\d{4})?$";
+    private const string IsoDateRegex = @"^(\d{4})-(\d{1,2})-(\d{1,2})$";
+    private const string TimezoneRegex = @"^utc(\+|-)([0-9]{1,2})$";
 
     [SlashCommand("time", "Gets the given time embed.")]
     public async Task Time([SlashCommandParameter(Name = "time", Description = "Selected Time", MinLength = 5, MaxLength = 5)] string time,
-        [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 5, MaxLength = 10)] string? date = null,
+        [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 3, MaxLength = 10)] string? date = null,
         [SlashCommandParameter(Name = "timezone", Description = "Selected Timezone")] string? timezone = null)
     {
         await SendTimeEmbed(Context.Interaction, time, date, timezone, TimestampStyle.LongDateTime);
@@ -21,7 +23,7 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
 
     [SlashCommand("until", "Gets the given time embed.")]
     public async Task Until([SlashCommandParameter(Name = "time", Description = "Selected Time", MinLength = 5, MaxLength = 5)] string time,
-        [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 5, MaxLength = 10)] string? date = null,
+        [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 3, MaxLength = 10)] string? date = null,
         [SlashCommandParameter(Name = "timezone", Description = "Selected Timezone")] string? timezone = null)
     {
         await SendTimeEmbed(Context.Interaction, time, date, timezone, TimestampStyle.RelativeTime);
@@ -121,14 +123,27 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
             return baseDate.ToString("dd/MM/yyyy");
         }
 
-        var matches = Regex.Match(date, DateRegex);
-        if (!matches.Success)
+        var slashMatches = Regex.Match(date, SlashDateRegex);
+        if (slashMatches.Success)
         {
-            return null;
+            var year = slashMatches.Groups[3].Value;
+            return $"{slashMatches.Groups[1].Value.PadLeft(2, '0')}/{slashMatches.Groups[2].Value.PadLeft(2, '0')}/{(year != string.Empty ? year : baseDate.Year)}";
         }
 
-        var year = matches.Groups[3].Value;
-        return $"{matches.Groups[1].Value}/{matches.Groups[2].Value}/{(year != string.Empty ? year : baseDate.Year)}";
+        var dotMatches = Regex.Match(date, DotDateRegex);
+        if (dotMatches.Success)
+        {
+            var year = dotMatches.Groups[3].Value;
+            return $"{dotMatches.Groups[1].Value.PadLeft(2, '0')}/{dotMatches.Groups[2].Value.PadLeft(2, '0')}/{(year != string.Empty ? year : baseDate.Year)}";
+        }
+
+        var isoMatches = Regex.Match(date, IsoDateRegex);
+        if (isoMatches.Success)
+        {
+            return $"{isoMatches.Groups[3].Value.PadLeft(2, '0')}/{isoMatches.Groups[2].Value.PadLeft(2, '0')}/{isoMatches.Groups[1].Value}";
+        }
+
+        return null;
     }
 
     private TimeZoneInfo? GetTimeZone(string? timezone, ulong uid)
@@ -146,16 +161,14 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
             {
                 return TZConvert.GetTimeZoneInfo(result);
             }
-            
-            var matches = Regex.Match(timezone.ToLower(), @"^utc(\+|-)([0-9]{1,2})$");
+
+            var matches = Regex.Match(timezone.ToLower(), TimezoneRegex);
             if (!matches.Success)
             {
                 return TZConvert.GetTimeZoneInfo(timezone);
             }
-            
-            var sign = int.Parse(matches.Groups[2].Value) > 0
-                ? "-"
-                : "+"; // Inverted due to Etc/GMT using reversed offsets
+
+            var sign = matches.Groups[1].Value == "+" ? "-" : "+"; // Inverted due to Etc/GMT using reversed offsets
             var value = Math.Abs(int.Parse(matches.Groups[2].Value));
             return TZConvert.GetTimeZoneInfo($"Etc/GMT{sign}{value}");
         }

@@ -14,7 +14,7 @@ public class GachaCodeToLinkCommandModule : ApplicationCommandModule<Application
             return;
         }
 
-        string url = gachaGame switch
+        var url = gachaGame switch
         {
             GachaOptions.Zzz => $"https://zenless.hoyoverse.com/redemption?code={code}",
             GachaOptions.Hsr => $"https://hsr.hoyoverse.com/gift?code={code}",
