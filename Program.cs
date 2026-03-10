@@ -17,18 +17,23 @@ public class Program
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Services
-            .AddDiscordGateway(SetGatewayClientOptions)
+            .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, config))
             .AddApplicationCommands(option =>
             {
                 // Commands are manually registered below to support Test Server
                 option.AutoRegisterCommands = false;
-            });
+            })
+            .AddSingleton<DatabaseService>();
 
         var host = builder.Build();
 
-        host.AddModules(typeof(Program).Assembly);
-        
         #region register commands
+        bool removeCommands = config.RemoveCommands;
+        if (!removeCommands)
+        {
+            host.AddModules(typeof(Program).Assembly);
+        }
+
         var client = host.Services.GetRequiredService<RestClient>();
 
         // make sure the minimal API style commands are added
@@ -46,18 +51,29 @@ public class Program
         }
 
         var applicationId = ((IEntityToken)client.Token!).Id;
-        
         if (config.TestServer == null)
         {
-            // register the global commands
-            await manager.RegisterCommandsAsync(client, applicationId);
+            if (!removeCommands)
+            {
+                await manager.RegisterCommandsAsync(client, applicationId);
+            }
+            else
+            {
+                await client.BulkOverwriteGlobalApplicationCommandsAsync(applicationId, []);
+            }
         }
         else
         {
             foreach (var guildId in config.TestServer)
             {
-                // register the guild commands
-                await manager.RegisterCommandsAsync(client, applicationId, guildId);
+                if (!removeCommands)
+                {
+                    await manager.RegisterCommandsAsync(client, applicationId, guildId);
+                }
+                else
+                {
+                    await client.BulkOverwriteGuildApplicationCommandsAsync(applicationId, guildId, []);
+                }
             }
         }
         #endregion
@@ -65,10 +81,8 @@ public class Program
         await host.RunAsync();
     }
 
-    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions)
+    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions, Config config)
     {
-        var config = ConfigHelper.GetJsonObject<Config>("config");
-
         gatewayOptions.Token = config.Token;
         gatewayOptions.Presence = new PresenceProperties(UserStatusType.Online).AddActivities([new UserActivityProperties("/help", UserActivityType.Listening)]);
     }

@@ -1,7 +1,7 @@
-﻿global using TimeZoneConverter;
+﻿global using System.Text.RegularExpressions;
 global using Multi_Bot.Net.Helpers;
 global using Multi_Bot.Net.Models;
-
+global using Multi_Bot.Net.Services;
 global using NetCord;
 global using NetCord.Gateway;
 global using NetCord.Hosting.Gateway;
