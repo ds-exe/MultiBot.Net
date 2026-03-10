@@ -2,7 +2,7 @@
 
 namespace Multi_Bot.Net.Helpers;
 
-public static class ConfigHelper
+public static class JsonHelper
 {
     public static T GetJsonObject<T>(string file)
     {

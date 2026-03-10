@@ -10,18 +10,19 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        var dbName = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "Multi_Bot.db";
-
-        _connection = new SqliteConnection($"Data Source=Database/{dbName}");
+        var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/app/data/Multi_Bot.db";
+        _connection = new SqliteConnection($"Data Source={dbPath}");
         try
         {
             _connection.Open();
-            InitialiseTables();
         }
-        catch
-        {
-            Console.WriteLine("DB connection error, folder or name invalid");
+        catch (SqliteException ex)
+        { 
+            Console.WriteLine("DB connection error");
+            _connection.Close();
+            return;
         }
+        InitialiseTables();
     }
 
     private void InitialiseTables()
@@ -43,6 +44,10 @@ public class DatabaseService
     {
         try
         {
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                return;
+            }
             const string query = $"REPLACE INTO TimeZoneData (UserId, TimeZoneId) VALUES (@UserId, @TimeZoneId)";
             _connection.Execute(query, tz);
         }
@@ -56,6 +61,10 @@ public class DatabaseService
     {
         try
         {
+            if (_connection.State != System.Data.ConnectionState.Open)
+            {
+                return TZConvert.GetTimeZoneInfo("utc");
+            }
             const string query = $"SELECT * FROM TimeZoneData WHERE UserId = @userId";
             var data = _connection.Query<TimeZoneData>(query, new { userId }).FirstOrDefault();
             return data == null ? null : TZConvert.GetTimeZoneInfo(data.TimeZoneId);

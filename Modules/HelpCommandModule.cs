@@ -13,10 +13,11 @@ public class HelpCommandModule : ApplicationCommandModule<ApplicationCommandCont
     public HelpCommandModule(RestClient discordClient)
     {
         _client = discordClient;
-        var config = ConfigHelper.GetJsonObject<Config>("config");
-        var botOwner = config.Owner == 0 ? CreatorId : config.Owner;
+        var owner = Environment.GetEnvironmentVariable(nameof(EnvVar.OWNER));
+        var ownerExists = ulong.TryParse(owner, out var ownerId);
+        var botOwner = ownerExists ? ownerId : CreatorId;
         _user = _client.GetUserAsync(botOwner).Result;
-        _embedThumbnail = config.EmbedThumbnail ?? "";
+        _embedThumbnail = Environment.GetEnvironmentVariable(nameof(EnvVar.EMBED_THUMBNAIL)) ?? "";
     }
 
     [SlashCommand("help", "Displays command help")]

@@ -4,7 +4,10 @@ services:
     pull_policy: always
     restart: unless-stopped
     environment:
-      - DATABASE_NAME=database_name.db
+      TOKEN: "Discord_Token" # Required
+      # DATABASE_PATH: "" # Optional, defaults to /app/data/Multi_Bot.db
+      # EMBED_THUMBNAIL: "" # Optional, defaults to empty
+      # OWNER: "" # Optional, defaults to Creator
+      # REMOVE_COMMANDS: "" # Optional, defaults to false
     volumes:
-      - ./config.json:/App/config.json
-      - ./Database:/App/Database
+      - ./path/to/data:/app/data # Required
