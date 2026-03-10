@@ -12,12 +12,17 @@ public class Program
 
     static async Task MainAsync(string[] args)
     {
-        var config = ConfigHelper.GetJsonObject<Config>("config");
+        var token = Environment.GetEnvironmentVariable(nameof(EnvVar.TOKEN));
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            Console.WriteLine("Please set environment variable TOKEN.");
+            return;
+        }
 
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Services
-            .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, config))
+            .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, token))
             .AddApplicationCommands(option =>
             {
                 // Commands are manually registered below to support Test Server
@@ -28,7 +33,8 @@ public class Program
         var host = builder.Build();
 
         #region register commands
-        bool removeCommands = config.RemoveCommands;
+        var removeCommandsEnvVar = Environment.GetEnvironmentVariable(nameof(EnvVar.REMOVE_COMMANDS));
+        bool.TryParse(removeCommandsEnvVar, out var removeCommands);
         if (!removeCommands)
         {
             host.AddModules(typeof(Program).Assembly);
@@ -50,8 +56,10 @@ public class Program
             manager.AddService(service);
         }
 
+        var testServersEnvVar = Environment.GetEnvironmentVariable(nameof(EnvVar.TEST_SERVERS));
+        var testServerList = testServersEnvVar?.Split(',').Select(ulong.Parse).ToList() ?? [];
         var applicationId = ((IEntityToken)client.Token!).Id;
-        if (config.TestServer == null)
+        if (testServerList.Count == 0)
         {
             if (!removeCommands)
             {
@@ -64,7 +72,7 @@ public class Program
         }
         else
         {
-            foreach (var guildId in config.TestServer)
+            foreach (var guildId in testServerList)
             {
                 if (!removeCommands)
                 {
@@ -81,9 +89,9 @@ public class Program
         await host.RunAsync();
     }
 
-    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions, Config config)
+    private static void SetGatewayClientOptions(GatewayClientOptions gatewayOptions, string token)
     {
-        gatewayOptions.Token = config.Token;
+        gatewayOptions.Token = token;
         gatewayOptions.Presence = new PresenceProperties(UserStatusType.Online).AddActivities([new UserActivityProperties("/help", UserActivityType.Listening)]);
     }
 }

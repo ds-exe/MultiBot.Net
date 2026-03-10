@@ -6,8 +6,8 @@ namespace Multi_Bot.Net.Modules;
 public class TimeCommandModule(DatabaseService databaseService) : ApplicationCommandModule<ApplicationCommandContext>
 {
     private static readonly Dictionary<string, string> TimeZones =
-        ConfigHelper.GetJsonObject<Dictionary<string, string>>("timezones");
-    
+        JsonHelper.GetJsonObject<Dictionary<string, string>>("timezones");
+
     private const string SlashDateRegex = @"^(\d{1,2})/(\d{1,2})/?(\d{4})?$";
     private const string DotDateRegex = @"^(\d{1,2})\.(\d{1,2})\.?(\d{4})?$";
     private const string IsoDateRegex = @"^(\d{4})-(\d{1,2})-(\d{1,2})$";
