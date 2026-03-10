@@ -5,5 +5,7 @@ public enum EnvVar
     TOKEN,
     OWNER,
     EMBED_THUMBNAIL,
-    TEST_SERVERS
+    TEST_SERVERS,
+    DATABASE_PATH,
+    REMOVE_COMMANDS
 }

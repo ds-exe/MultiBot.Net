@@ -10,7 +10,7 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        var dbPath = Environment.GetEnvironmentVariable("DATABASE_PATH") ?? "/app/data/Multi_Bot.db";
+        var dbPath = Environment.GetEnvironmentVariable(nameof(EnvVar.DATABASE_PATH)) ?? "/app/data/Multi_Bot.db";
         _connection = new SqliteConnection($"Data Source={dbPath}");
         try
         {

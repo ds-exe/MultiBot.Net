@@ -33,7 +33,7 @@ public class Program
         var host = builder.Build();
 
         #region register commands
-        var removeCommandsEnvVar = Environment.GetEnvironmentVariable("REMOVE_COMMANDS");
+        var removeCommandsEnvVar = Environment.GetEnvironmentVariable(nameof(EnvVar.REMOVE_COMMANDS));
         bool.TryParse(removeCommandsEnvVar, out var removeCommands);
         if (!removeCommands)
         {
