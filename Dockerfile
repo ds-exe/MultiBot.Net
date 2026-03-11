@@ -12,6 +12,4 @@ RUN dotnet publish ./MultiBot.Net.csproj -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build-env /app/out .
-COPY --from=build-env /app/timezones.json .
-CMD ["ls"]
 ENTRYPOINT ["dotnet", "MultiBot.Net.dll"]
