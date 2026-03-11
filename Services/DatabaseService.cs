@@ -16,7 +16,7 @@ public class DatabaseService
         {
             _connection.Open();
         }
-        catch (SqliteException ex)
+        catch (SqliteException)
         { 
             Console.WriteLine("DB connection error");
             _connection.Close();
