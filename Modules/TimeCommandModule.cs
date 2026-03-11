@@ -5,8 +5,24 @@ namespace Multi_Bot.Net.Modules;
 
 public class TimeCommandModule(DatabaseService databaseService) : ApplicationCommandModule<ApplicationCommandContext>
 {
-    private static readonly Dictionary<string, string> TimeZones =
-        JsonHelper.GetJsonObject<Dictionary<string, string>>("timezones");
+    private static readonly Dictionary<string, string> TimeZones = new()
+    {
+        { "utc", "UTC" },
+        { "gmt", "UTC" },
+        { "bst", "Etc/GMT-1" },
+        { "cet", "Etc/GMT-1" },
+        { "cest", "Etc/GMT-2" },
+        { "cst", "Etc/GMT+6" },
+        { "cdt", "Etc/GMT+5" },
+        { "ct", "Canada/Central" },
+        { "est", "Etc/GMT+5" },
+        { "edt", "Etc/GMT+4" },
+        { "et", "Canada/Eastern" },
+        { "jst", "Etc/GMT-9" },
+        { "pst", "Etc/GMT+8" },
+        { "pdt", "Etc/GMT+7" },
+        { "pt", "Canada/Pacific" }
+    };
 
     private const string SlashDateRegex = @"^(\d{1,2})/(\d{1,2})/?(\d{4})?$";
     private const string DotDateRegex = @"^(\d{1,2})\.(\d{1,2})\.?(\d{4})?$";
@@ -96,7 +112,7 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
         var timestamp = new Timestamp(TimeZoneInfo.ConvertTimeToUtc(datetime, zone), format).ToString();
         await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp));
     }
-    
+
     private static EmbedProperties GetTimestampEmbed(string time)
     {
         return new EmbedProperties()
