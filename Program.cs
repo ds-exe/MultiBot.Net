@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Multi_Bot.Net;
 
@@ -22,13 +23,29 @@ public class Program
         var builder = Host.CreateApplicationBuilder(args);
 
         builder.Services
+            .AddSingleton<DatabaseService>()
             .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, token))
             .AddApplicationCommands(option =>
             {
                 // Commands are manually registered below to support Test Server
                 option.AutoRegisterCommands = false;
-            })
-            .AddSingleton<DatabaseService>();
+            });
+
+        var logLevel = Environment.GetEnvironmentVariable(nameof(EnvVar.LOGGING_LEVEL))?.ToUpper();
+        if (string.IsNullOrWhiteSpace(logLevel))
+        {
+            builder.Logging.SetMinimumLevel(LogLevel.None);
+        }
+        else
+        {
+            foreach (var level in Enum.GetNames<LogLevel>())
+            {
+                if (level.ToUpper() == logLevel || level[0..4].ToUpper() == logLevel)
+                {
+                    builder.Logging.SetMinimumLevel(Enum.Parse<LogLevel>(level));
+                }
+            }
+        }
 
         var host = builder.Build();
 
@@ -40,17 +57,14 @@ public class Program
             host.AddModules(typeof(Program).Assembly);
         }
 
-        var client = host.Services.GetRequiredService<RestClient>();
-
         // make sure the minimal API style commands are added
         foreach (var commandsBuilder in host.Services.GetServices<IApplicationCommandsBuilder>())
         {
             commandsBuilder.Build();
         }
 
-        ApplicationCommandServiceManager manager = new();
-
         // add registered services to the manager
+        ApplicationCommandServiceManager manager = new();
         foreach (var service in host.Services.GetServices<IApplicationCommandService>())
         {
             manager.AddService(service);
@@ -58,6 +72,8 @@ public class Program
 
         var testServersEnvVar = Environment.GetEnvironmentVariable(nameof(EnvVar.TEST_SERVERS));
         var testServerList = testServersEnvVar?.Split(',').Select(ulong.Parse).ToList() ?? [];
+
+        var client = host.Services.GetRequiredService<RestClient>();
         var applicationId = ((IEntityToken)client.Token!).Id;
         if (testServerList.Count == 0)
         {
