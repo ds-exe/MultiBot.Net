@@ -24,6 +24,8 @@ public class Program
 
         builder.Services
             .AddSingleton<DatabaseService>()
+            .AddSingleton<UntilReminderService>()
+            .AddHostedService(provider => provider.GetRequiredService<UntilReminderService>())
             .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, token))
             .AddApplicationCommands(option =>
             {
