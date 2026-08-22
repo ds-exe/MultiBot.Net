@@ -24,7 +24,10 @@ public class Program
 
         builder.Services
             .AddSingleton<DatabaseService>()
+            .AddSingleton<UntilReminderService>()
+            .AddHostedService(provider => provider.GetRequiredService<UntilReminderService>())
             .AddDiscordGateway(gatewayOptions => SetGatewayClientOptions(gatewayOptions, token))
+            .AddComponentInteractions<ButtonInteraction, ButtonInteractionContext>()
             .AddApplicationCommands(option =>
             {
                 // Commands are manually registered below to support Test Server

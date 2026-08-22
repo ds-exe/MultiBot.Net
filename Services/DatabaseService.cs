@@ -29,12 +29,12 @@ public class DatabaseService
     {
         InitialiseTable("TimeZoneData(UserId INTEGER PRIMARY KEY, TimeZoneId TEXT)");
         InitialiseTable("UntilReminder(MessageId INTEGER PRIMARY KEY, ChannelId INTEGER, NotifyTimestamp INTEGER, MessageText TEXT)");
-        InitialiseTable("UntilReminderUser(MessageId INTEGER, UserId INTEGER, applicationId INTEGER, token string, PRIMARY KEY(MessageId, UserID))");
+        InitialiseTable("UntilReminderUser(MessageId INTEGER, UserId INTEGER, PRIMARY KEY(MessageId, UserId))");
     }
 
     private void InitialiseTable(string table)
     {
-        var query = $"CREATE TABLE IF NOT EXISTS {table}";
+        var query = $"CREATE TABLE IF NOT EXISTS {table};";
         _connection.Execute(query);
     }
 
@@ -46,7 +46,7 @@ public class DatabaseService
             {
                 return;
             }
-            const string query = $"REPLACE INTO TimeZoneData (UserId, TimeZoneId) VALUES (@UserId, @TimeZoneId)";
+            const string query = $"REPLACE INTO TimeZoneData (UserId, TimeZoneId) VALUES (@UserId, @TimeZoneId);";
             _connection.Execute(query, tz);
         }
         catch
@@ -63,7 +63,7 @@ public class DatabaseService
             {
                 return TZConvert.GetTimeZoneInfo("utc");
             }
-            const string query = $"SELECT * FROM TimeZoneData WHERE UserId = @userId";
+            const string query = $"SELECT * FROM TimeZoneData WHERE UserId = @userId;";
             var data = _connection.Query<TimeZoneData>(query, new { userId }).FirstOrDefault();
             return data == null ? null : TZConvert.GetTimeZoneInfo(data.TimeZoneId);
         }
@@ -83,7 +83,7 @@ public class DatabaseService
                 return reminder;
             }
 
-            const string query = "REPLACE INTO UntilReminder (MessageId, ChannelId, NotifyTimestamp, MessageText) VALUES (@MessageId, @ChannelId, @NotifyTimestamp, @MessageText)";
+            const string query = "REPLACE INTO UntilReminder (MessageId, ChannelId, NotifyTimestamp, MessageText) VALUES (@MessageId, @ChannelId, @NotifyTimestamp, @MessageText);";
             _connection.Execute(query, reminder);
         }
         catch
@@ -103,7 +103,7 @@ public class DatabaseService
                 return [];
             }
 
-            const string query = "SELECT * FROM UntilReminder";
+            const string query = "SELECT * FROM UntilReminder;";
             return _connection.Query<UntilReminderData>(query).ToList();
         }
         catch
@@ -112,39 +112,39 @@ public class DatabaseService
         }
     }
 
-    public void InsertUntilReminderUser(UntilReminderUserData reminderUser)
+    public ReminderState ToggleUntilReminderUser(ulong messageId, ulong userId)
     {
         try
         {
             if (_connection.State != System.Data.ConnectionState.Open)
             {
-                return;
+                return ReminderState.Errored;
             }
 
-            const string query = "REPLACE INTO UntilReminderUser (MessageId, UserId) VALUES (@MessageId, @UserId, @ApplicationId, @Token)";
-            _connection.Execute(query, reminderUser);
-        }
-        catch
-        {
-            // ignored
-        }
-    }
-
-    public void DeleteUntilReminderUser(ulong messageId, ulong userId)
-    {
-        try
-        {
-            if (_connection.State != System.Data.ConnectionState.Open)
+            const string reminderQuery = "SELECT * FROM UntilReminder WHERE MessageId = @messageId LIMIT 1;";
+            var foundReminder = _connection.Query<UntilReminderData>(reminderQuery, new { messageId }).FirstOrDefault();
+            if (foundReminder == null)
             {
-                return;
+                return ReminderState.Errored;
             }
 
-            const string query = "DELETE FROM UntilReminderUser WHERE MessageId = @messageId AND UserId = @userId";
+            const string checkQuery = "SELECT * FROM UntilReminderUser WHERE MessageId = @messageId AND UserId = @userId LIMIT 1;";
+            var foundUser = _connection.Query<UntilReminderUserData>(checkQuery, new { messageId, userId }).FirstOrDefault();
+            if (foundUser == null)
+            {
+                const string insertQuery = "REPLACE INTO UntilReminderUser (MessageId, UserId) VALUES (@messageId, @userId);";
+                _connection.Execute(insertQuery, new { messageId, userId });
+                return ReminderState.Inserted;
+            }
+
+            const string query = "DELETE FROM UntilReminderUser WHERE MessageId = @messageId AND UserId = @userId;";
             _connection.Execute(query, new { messageId, userId });
+            return ReminderState.Deleted;
+
         }
         catch
         {
-            // ignored
+            return ReminderState.Errored;
         }
     }
 
@@ -157,7 +157,7 @@ public class DatabaseService
                 return [];
             }
 
-            const string query = "SELECT * FROM UntilReminderUser WHERE MessageId = @messageId";
+            const string query = "SELECT * FROM UntilReminderUser WHERE MessageId = @messageId;";
             return _connection.Query<UntilReminderUserData>(query, new { messageId }).ToList();
         }
         catch
@@ -175,8 +175,8 @@ public class DatabaseService
                 return;
             }
 
-            const string deleteUsers = "DELETE FROM UntilReminderUser WHERE MessageId = @messageId";
-            const string deleteReminder = "DELETE FROM UntilReminder WHERE MessageId = @messageId";
+            const string deleteUsers = "DELETE FROM UntilReminderUser WHERE MessageId = @messageId;";
+            const string deleteReminder = "DELETE FROM UntilReminder WHERE MessageId = @messageId;";
             _connection.Execute(deleteUsers, new { messageId });
             _connection.Execute(deleteReminder, new { messageId });
         }

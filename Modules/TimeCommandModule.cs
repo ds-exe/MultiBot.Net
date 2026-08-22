@@ -53,13 +53,20 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
         {
             return;
         }
-        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime);
 
+        ActionRowProperties? component = null;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            component = new()
+            {
+                new ButtonProperties("until-reminder", UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
+            };
+        }
+
+        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component);
         if (!string.IsNullOrWhiteSpace(message))
         {
             var response = await Context.Interaction.GetResponseAsync();
-            //TODO: swap to button interaction
-            await response.AddReactionAsync(UntilReminderService.ReminderEmoji);
             await untilReminderService.TrackReminderAsync(response.ChannelId, response.Id, datetime.Value, message);
         }
     }
@@ -131,10 +138,10 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
         return TimeZoneInfo.ConvertTimeToUtc(datetime, zone);
     }
 
-    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format)
+    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null)
     {
         var timestamp = new Timestamp(datetime, format).ToString();
-        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp));
+        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp), component: component);
     }
 
     private static EmbedProperties GetTimestampEmbed(string time)

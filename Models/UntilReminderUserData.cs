@@ -5,8 +5,4 @@ public class UntilReminderUserData
     public ulong MessageId { get; set; }
     
     public ulong UserId { get; set; }
-    
-    public ulong ApplicationId { get; set; }
-    
-    public required string Token { get; set; }
 }

@@ -7,5 +7,7 @@ global using NetCord.Gateway;
 global using NetCord.Hosting.Gateway;
 global using NetCord.Hosting.Services;
 global using NetCord.Hosting.Services.ApplicationCommands;
+global using NetCord.Hosting.Services.ComponentInteractions;
 global using NetCord.Rest;
 global using NetCord.Services.ApplicationCommands;
+global using NetCord.Services.ComponentInteractions;

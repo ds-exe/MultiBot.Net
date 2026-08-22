@@ -2,7 +2,7 @@ namespace Multi_Bot.Net.Helpers;
 
 public static class InteractionHelper
 {
-    public static async Task SendResponse(ApplicationCommandInteraction interaction, string? text = null, EmbedProperties? embed = null, bool isEphemeral = false)
+    public static async Task SendResponse(Interaction interaction, string? text = null, EmbedProperties? embed = null, IMessageComponentProperties? component = null, bool isEphemeral = false)
     {
         if (text == null && embed == null)
         {
@@ -13,7 +13,8 @@ public static class InteractionHelper
         {
             Flags = isEphemeral ? MessageFlags.Ephemeral : 0,
             Content = text,
-            Embeds =  embed != null ? [embed] : null
+            Embeds = embed != null ? [embed] : null,
+            Components = component != null ? [component] : null
         };
         await interaction.SendResponseAsync(InteractionCallback.Message(message));
     }
@@ -23,13 +24,14 @@ public static class InteractionHelper
         await interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
     }
 
-    public static async Task SendFollowupResponse(ApplicationCommandInteraction interaction, string text, EmbedProperties? embed = null, bool isEphemeral = false)
+    public static async Task SendFollowupResponse(ApplicationCommandInteraction interaction, string text, EmbedProperties? embed = null, IMessageComponentProperties? component = null, bool isEphemeral = false)
     {
         var message = new InteractionMessageProperties()
         {
             Flags = isEphemeral ? MessageFlags.Ephemeral : 0,
             Content = text,
-            Embeds =  embed != null ? [embed] : null
+            Embeds =  embed != null ? [embed] : null,
+            Components = component != null ? [component] : null
         };
         await interaction.SendFollowupMessageAsync(message);
     }
