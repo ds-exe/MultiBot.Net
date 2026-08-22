@@ -73,7 +73,6 @@ public class DatabaseService
         }
     }
     
-    
     public UntilReminderData InsertUntilReminder(UntilReminderData reminder)
     {
         try
