@@ -3,7 +3,7 @@ using TimeZoneConverter;
 
 namespace Multi_Bot.Net.Modules;
 
-public class TimeCommandModule(DatabaseService databaseService) : ApplicationCommandModule<ApplicationCommandContext>
+public class TimeCommandModule(DatabaseService databaseService, UntilReminderService untilReminderService) : ApplicationCommandModule<ApplicationCommandContext>
 {
     private static readonly Dictionary<string, string> TimeZones = new()
     {
@@ -34,15 +34,41 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
         [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 3, MaxLength = 10)] string? date = null,
         [SlashCommandParameter(Name = "timezone", Description = "Selected Timezone")] string? timezone = null)
     {
-        await SendTimeEmbed(Context.Interaction, time, date, timezone, TimestampStyle.LongDateTime);
+        var datetime = await GetDateTime(Context.Interaction, time, date, timezone);
+        if (datetime == null)
+        {
+            return;
+        }
+        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.LongDateTime);
     }
 
     [SlashCommand("until", "Gets the given time embed.")]
     public async Task Until([SlashCommandParameter(Name = "time", Description = "Selected Time", MinLength = 5, MaxLength = 5)] string time,
         [SlashCommandParameter(Name = "date", Description = "Selected Date", MinLength = 3, MaxLength = 10)] string? date = null,
-        [SlashCommandParameter(Name = "timezone", Description = "Selected Timezone")] string? timezone = null)
+        [SlashCommandParameter(Name = "timezone", Description = "Selected Timezone")] string? timezone = null,
+        [SlashCommandParameter(Name = "message", Description = "Reminder Message")] string? message = null)
     {
-        await SendTimeEmbed(Context.Interaction, time, date, timezone, TimestampStyle.RelativeTime);
+        var datetime = await GetDateTime(Context.Interaction, time, date, timezone);
+        if (datetime == null)
+        {
+            return;
+        }
+
+        ActionRowProperties? component = null;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            component = new()
+            {
+                new ButtonProperties("until-reminder", UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
+            };
+        }
+
+        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component);
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            var response = await Context.Interaction.GetResponseAsync();
+            await untilReminderService.TrackReminderAsync(response.ChannelId, response.Id, datetime.Value, message);
+        }
     }
 
     [SlashCommand("now", "Gets the given time.")]
@@ -85,20 +111,20 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
         await InteractionHelper.SendResponse(Context.Interaction, text: "Invalid Time Zone", isEphemeral: true);
     }
 
-    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, string time, string? date, string? timezone, TimestampStyle format)
+    private async Task<DateTime?> GetDateTime(ApplicationCommandInteraction interaction, string time, string? date, string? timezone)
     {
         var zone = GetTimeZone(timezone, interaction.User.Id);
         if (zone == null)
         {
             await InteractionHelper.SendResponse(interaction, text: "Invalid timezone", isEphemeral: true);
-            return;
+            return null;
         }
 
         date = ParseDate(date, zone);
         if (date == null)
         {
             await InteractionHelper.SendResponse(interaction, text: "Invalid date", isEphemeral: true);
-            return;
+            return null;
         }
 
         var success = DateTime.TryParseExact($"{time} {date}", "HH:mm dd/MM/yyyy", CultureInfo.InvariantCulture,
@@ -106,11 +132,16 @@ public class TimeCommandModule(DatabaseService databaseService) : ApplicationCom
         if (!success)
         {
             await InteractionHelper.SendResponse(interaction, text: "Invalid time", isEphemeral: true);
-            return;
+            return null;
         }
 
-        var timestamp = new Timestamp(TimeZoneInfo.ConvertTimeToUtc(datetime, zone), format).ToString();
-        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp));
+        return TimeZoneInfo.ConvertTimeToUtc(datetime, zone);
+    }
+
+    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null)
+    {
+        var timestamp = new Timestamp(datetime, format).ToString();
+        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp), component: component);
     }
 
     private static EmbedProperties GetTimestampEmbed(string time)
