@@ -111,7 +111,7 @@ public class DatabaseService
         }
     }
 
-    public ReminderState ToggleUntilReminderUser(ulong messageId, ulong userId)
+    public ReminderState ToggleUntilReminderUser(RestMessage message, User user)
     {
         try
         {
@@ -119,6 +119,9 @@ public class DatabaseService
             {
                 return ReminderState.Errored;
             }
+
+            var messageId = message.Id;
+            var userId = user.Id;
 
             const string reminderQuery = "SELECT * FROM UntilReminder WHERE MessageId = @messageId LIMIT 1;";
             var foundReminder = _connection.Query<UntilReminderData>(reminderQuery, new { messageId }).FirstOrDefault();
@@ -139,7 +142,6 @@ public class DatabaseService
             const string query = "DELETE FROM UntilReminderUser WHERE MessageId = @messageId AND UserId = @userId;";
             _connection.Execute(query, new { messageId, userId });
             return ReminderState.Deleted;
-
         }
         catch
         {

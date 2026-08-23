@@ -1,4 +1,4 @@
-namespace Multi_Bot.Net.Models;
+namespace Multi_Bot.Net.Enums;
 
 public enum ReminderState
 {

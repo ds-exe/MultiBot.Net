@@ -52,6 +52,12 @@ public class UntilReminderService(
             if (reminderUsers.Count > 0)
             {
                 var content = string.Join(" ", reminderUsers.Select(rec => $"<@{rec.UserId}>"));
+                var embed = new EmbedProperties
+                {
+                    Title = "Event Reminder:",
+                    Description = reminder.MessageText,
+                    Color = new Color(65535), //00ffff
+                };
                 await restClient.SendMessageAsync(reminder.ChannelId, new MessageProperties()
                 {
                     Content = content,
@@ -60,6 +66,7 @@ public class UntilReminderService(
                     {
                         ReplyMention = false
                     },
+                    Embeds = [embed],
                 }, cancellationToken: cancellationToken);
             }
         }

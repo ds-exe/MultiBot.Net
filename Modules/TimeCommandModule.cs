@@ -59,11 +59,11 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
         {
             component = new()
             {
-                new ButtonProperties("until-reminder", UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
+                new ButtonProperties(nameof(ButtonId.UntilReminder), UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
             };
         }
 
-        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component);
+        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component, message: message);
         if (!string.IsNullOrWhiteSpace(message))
         {
             var response = await Context.Interaction.GetResponseAsync();
@@ -138,27 +138,35 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
         return TimeZoneInfo.ConvertTimeToUtc(datetime, zone);
     }
 
-    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null)
+    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null, string? message = null)
     {
         var timestamp = new Timestamp(datetime, format).ToString();
-        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp), component: component);
+        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp, message), component: component);
     }
 
-    private static EmbedProperties GetTimestampEmbed(string time)
+    private static EmbedProperties GetTimestampEmbed(string time, string? message)
     {
+        List<EmbedFieldProperties> embedFields = [];
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            embedFields.Add(new EmbedFieldProperties
+            {
+                Name = "Event Text:",
+                Value = message
+            });
+        }
+        embedFields.Add(new EmbedFieldProperties()
+        {
+            Name = "Copy Link:",
+            Value = $"\\{time}"
+        });
+
         return new EmbedProperties()
         {
             Title = "Local time:",
             Description = time,
             Color = new Color(65535), //00ffff
-            Fields =
-            [
-                new EmbedFieldProperties()
-                {
-                    Name = "Copy Link:",
-                    Value = $"\\{time}"
-                }
-            ],
+            Fields = embedFields,
         };
     }
 

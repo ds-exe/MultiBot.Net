@@ -2,10 +2,10 @@ namespace Multi_Bot.Net.Modules;
 
 public class ButtonModule(DatabaseService databaseService) : ComponentInteractionModule<ButtonInteractionContext>
 {
-    [ComponentInteraction("until-reminder")]
+    [ComponentInteraction(nameof(ButtonId.UntilReminder))]
     public async Task UntilReminder()
     {
-        var state = databaseService.ToggleUntilReminderUser(Context.Message.Id, Context.Interaction.User.Id);
+        var state = databaseService.ToggleUntilReminderUser(Context.Message, Context.Interaction.User);
         switch (state)
         {
             case ReminderState.Inserted:
@@ -16,6 +16,9 @@ public class ButtonModule(DatabaseService databaseService) : ComponentInteractio
                 break;
             case ReminderState.Errored:
                 await InteractionHelper.SendResponse(Context.Interaction, "Error creating notification", isEphemeral: true);
+                break;
+            default:
+                await InteractionHelper.SendResponse(Context.Interaction, "Unknown reminder state", isEphemeral: true);
                 break;
         }
     }
