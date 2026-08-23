@@ -54,21 +54,25 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
             return;
         }
 
-        ActionRowProperties? component = null;
-        if (!string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(message))
         {
-            component = new()
-            {
-                new ButtonProperties(nameof(ButtonId.UntilReminder), UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
-            };
+            await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime);
+            return;
         }
 
-        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component, message: message);
-        if (!string.IsNullOrWhiteSpace(message))
+        var component = new ActionRowProperties()
         {
-            var response = await Context.Interaction.GetResponseAsync();
-            await untilReminderService.TrackReminderAsync(response.ChannelId, response.Id, datetime.Value, message);
-        }
+            new ButtonProperties(nameof(ButtonId.UntilReminder), UntilReminderService.ReminderEmoji, ButtonStyle.Primary)
+        };
+        var embedField = new EmbedFieldProperties
+        {
+            Name = "Event:",
+            Value = message
+        };
+
+        await SendTimeEmbed(Context.Interaction, datetime.Value, TimestampStyle.RelativeTime, component: component, embedField: embedField);
+        var response = await Context.Interaction.GetResponseAsync();
+        await untilReminderService.TrackReminderAsync(response.ChannelId, response.Id, datetime.Value, message);
     }
 
     [SlashCommand("now", "Gets the given time.")]
@@ -138,23 +142,15 @@ public class TimeCommandModule(DatabaseService databaseService, UntilReminderSer
         return TimeZoneInfo.ConvertTimeToUtc(datetime, zone);
     }
 
-    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null, string? message = null)
+    private async Task SendTimeEmbed(ApplicationCommandInteraction interaction, DateTime datetime, TimestampStyle format, IMessageComponentProperties? component = null, EmbedFieldProperties? embedField = null)
     {
         var timestamp = new Timestamp(datetime, format).ToString();
-        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp, message), component: component);
+        await InteractionHelper.SendResponse(interaction, embed: GetTimestampEmbed(timestamp, embedField), component: component);
     }
 
-    private static EmbedProperties GetTimestampEmbed(string time, string? message)
+    private static EmbedProperties GetTimestampEmbed(string time, EmbedFieldProperties? embedField)
     {
-        List<EmbedFieldProperties> embedFields = [];
-        if (!string.IsNullOrWhiteSpace(message))
-        {
-            embedFields.Add(new EmbedFieldProperties
-            {
-                Name = "Event Text:",
-                Value = message
-            });
-        }
+        List<EmbedFieldProperties> embedFields = embedField == null ? [] : [embedField];
         embedFields.Add(new EmbedFieldProperties()
         {
             Name = "Copy Link:",
